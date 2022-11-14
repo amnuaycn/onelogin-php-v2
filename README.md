@@ -1,4 +1,4 @@
-# onelogin-php
+# onelogin-php-v2
  
 1. $ git clone https://github.com/amnuaycn/onelogin-php-v2.git
 2. $ cd onelogin-php-v2

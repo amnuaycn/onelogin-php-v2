@@ -9,25 +9,38 @@ class Onelogin extends GenericProvider {
     public function Logout($url,$redirect_url,$id_token)
     {
        session_unset();
-       unset($_COOKIE[$this->name.'s_user']);
+       $this->clearCookies();
        header('location: '.$url.'?post_logout_redirect_uri='.$redirect_url.'&id_token_hint='.$id_token);
     }
     
     public function revokeToken($token, $token_type_hint, $clientId = null, $clientSecret = null) {
         session_unset();
         $revocation_endpoint = $this->getAccessTokenUrl([]) . '/revocation';
-        $post_data = ['token' => $token];
-        $post_data['token_type_hint'] = $token_type_hint;
-        
         $clientId = $clientId !== null ? $clientId : $this->clientId;
         $clientSecret = $clientSecret !== null ? $clientSecret : $this->clientSecret;
-      
+
+        $post_data = ['token' => $token];
+        $post_data['token_type_hint'] = $token_type_hint;
+        $post_data['client_id'] = $clientId;
+        $post_data['client_secret'] = $clientSecret;
+
         // Convert token params to string format
         $post_params = http_build_query($post_data, '', '&');
-        $headers = ['Authorization: Basic ' . base64_encode(urlencode($clientId) . ':' . urlencode($clientSecret)),
-            'Accept: application/json'];
+        $headers = ['Accept: application/json'];
 
         return json_decode($this->fetchURL($revocation_endpoint, $post_params, $headers));
+    }
+
+   public function clearCookies($clearSession = false)
+    {
+        $past = time() - 3600;
+        if ($clearSession === false)
+            $sessionId = session_id();
+        foreach ($_COOKIE as $key => $value)
+        {
+            if ($clearSession !== false || $value !== $sessionId)
+                setcookie($key, $value, $past, '/');
+        }
     }
 
     public function saveLocalIdToken($key,$value){
@@ -53,7 +66,6 @@ class Onelogin extends GenericProvider {
                     return true;
             }else {
                $uuid_user =  $this->getSessionUser();
-              
                if(!isset($uuid_user) || empty($uuid_user)) {
                     return false;
                }else{

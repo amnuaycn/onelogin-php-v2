@@ -23,9 +23,11 @@ if (isset($_GET['refreshToken']) && $_GET['refreshToken'] = 1) {
     $_SESSION['token'] = serialize($accessToken);
 }
 if (isset($_GET['revokeToken']) && $_GET['revokeToken'] = 1) {
-    $id_token = $token->getvalues()['id_token'];
-    $status = $provider->revokeToken($token->getToken(),'access_token');
-    print_r($status);
+    $status = $provider->revokeToken($token->getRefreshToken(),'refresh_token');
+    if(empty($status)) {
+        header('Location: /index.php');
+    }
+    var_dump($status);
 }
 
 try {
@@ -53,6 +55,7 @@ echo "<b>Refresh token is:</b> <tt>", $token->getRefreshToken(), "</tt><br/>";
 // Number of seconds until the access token will expire, and need refreshing
 echo "<b>Expires at </b>", date('r', $token->getExpires()), "<br/>";
 
-echo '<a href="?refreshToken=1">RefreshToken</a> ';
+echo '<a href="?refreshToken=1">RefreshToken</a>|';
+echo '<a href="?revokeToken=1">revokeToken</a>|';
 // Allow the user to logout
 echo '<a href="?logout=1">Logout</a><br/>';
